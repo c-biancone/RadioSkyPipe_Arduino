@@ -15,9 +15,12 @@
 
 // ADC
 Adafruit_ADS1115 ads;  /* Use this for the 16-bit version */
+// setup ADC variables
+int16_t adc0, adc1, adc2, adc3;
+float volts0, volts1, volts2, volts3;
 
 // temp
-int DSPIN = PA0;  // temp sensor 1-wire pin
+int DSPIN = A0;  // temp sensor 1-wire pin
 double temp = 0;
 
 // SkyPipe
@@ -26,11 +29,11 @@ int STAT; // -1 = we were just stopped by a KILL command 0 = startup state 1 = I
 
 void setup() {
   // i2c bus
-  Wire.setSCL(PB_8);
-  Wire.setSDA(PB_9);
+  //Wire.setSCL(PB_8);
+  //Wire.setSDA(PB_9);
   Wire.begin();
-  Serial.begin(115200);
-  Serial.println("Hello!");
+  //Serial.begin(115200);
+  //Serial.println("Hello!");
 
 // SkyPipe
     STAT == 0;
@@ -61,10 +64,6 @@ void setup() {
 int incomingByte;
 
 void loop() {
-// setup ADC variables
-  int16_t adc0, adc1, adc2, adc3;
-  float volts0, volts1, volts2, volts3;
-
     // if we are pushing the data to RSP then we need to
     // establish our timing for sending new data.
     // here we are just doing a delay of 100ms to get a

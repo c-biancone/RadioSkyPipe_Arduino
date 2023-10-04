@@ -2,21 +2,21 @@
 #include <Wire.h>
 
 Adafruit_ADS1115 ads;  /* Use this for the 16-bit version */
-int DSPIN = PA0;  // temp sensor 1-wire pin
+int DSPIN = A0;  // temp sensor 1-wire pin
 double temp = 0;
 
 // Pin connected to the ALERT/RDY signal for new sample notification.
 void setup(void)
 {
-  Wire.setSCL(PB_8);
-  Wire.setSDA(PB_9);
+  //Wire.setSCL(A4);
+  //Wire.setSDA(A5);
   Wire.begin();
   Serial.begin(115200);
   Serial.println("Hello!");
 
   Serial.println("Getting single-ended readings from AIN0..3");
   Serial.println("ADC Range: +/- 6.144V (1 bit = 3mV/ADS1015, 0.1875mV/ADS1115)");
-
+ 
   // The ADC input range (or gain) can be changed via the following
   // functions, but be careful never to exceed VDD +0.3V max, or to
   // exceed the upper and lower limits if you adjust the input range!
