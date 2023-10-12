@@ -4,13 +4,14 @@
 
 // modified by Will Wright for use in the H1 Radio Telescope project for RIT MSD (Spring-2023 to Fall-2023)
 // currently operates using 4 channels as opposed to the original 1 channel
-// mofified by Chris Biancone for use on STM Nucleo F302R8 with ADS1115 for data acquisition
+// mofified by Chris Biancone for use on Arduino Uno with ADS1115 for data acquisition
 // and DS28B20 temperature sensor
 
 // ADC CH1:
 
 
 #include <Adafruit_ADS1X15.h>
+#include <DHT.h>
 #include <Wire.h>
 
 // ADC
@@ -19,8 +20,12 @@ Adafruit_ADS1115 ads;  /* Use this for the 16-bit version */
 int16_t adc0, adc1, adc2, adc3;
 float volts0, volts1, volts2, volts3;
 
-// temp
-int DSPIN = A0;  // temp sensor 1-wire pin
+// DHT22 sensor
+#define DHTPIN 2
+#define DHTTYPE DHT22
+DHT dht(DHTPIN, DHTTYPE);
+int chk;
+double hum = 0;
 double temp = 0;
 
 // SkyPipe
@@ -28,10 +33,7 @@ int POLL; // if =1 then data is polled by RSP using a GETD command
 int STAT; // -1 = we were just stopped by a KILL command 0 = startup state 1 = INIT rcvd 2 = Ready to Go 3= Running
 
 void setup() {
-  // i2c bus
-  //Wire.setSCL(PB_8);
-  //Wire.setSDA(PB_9);
-  Wire.begin();
+  dht.begin();
   //Serial.begin(115200);
   //Serial.println("Hello!");
 
@@ -186,6 +188,8 @@ void GETD(){
     volts2 = ads.computeVolts(adc2);
     adc3 = ads.readADC_SingleEnded(3);
     volts3 = ads.computeVolts(adc3);
+    hum = dht.readHumidity();
+    temp = dht.readTemperature();
 
 		// channel 1
         Serial.print("#0"); // # followed by channel number of data
@@ -210,84 +214,16 @@ void GETD(){
 		
 		// channel 4
 		Serial.print("#3"); // # followed by channel number of data
-        Serial.print(volts3); // example read
+        Serial.print(temp); // example read
+        Serial.write(255);
+        Serial.print("^^3001"); // This tells RSP to time stamp it
+        Serial.write(255); // all commands end with this character.
+
+    // channel 5
+		Serial.print("#4"); // # followed by channel number of data
+        Serial.print(hum); // example read
         Serial.write(255);
         Serial.print("^^3001"); // This tells RSP to time stamp it
         Serial.write(255); // all commands end with this character.
         return;
-}
-
-
-/* Temp Sensor Functions */
-boolean DS18B20_Init()
-{
-  pinMode(DSPIN, OUTPUT);
-  digitalWrite(DSPIN, HIGH);
-  delayMicroseconds(5);
-  digitalWrite(DSPIN, LOW);
-  delayMicroseconds(750);//480-960
-  digitalWrite(DSPIN, HIGH);
-  pinMode(DSPIN, INPUT);
-  int t = 0;
-  while (digitalRead(DSPIN))
-  {
-    t++;
-    if (t > 60) return false;
-    delayMicroseconds(1);
-  }
-  t = 480 - t;
-  pinMode(DSPIN, OUTPUT);
-  delayMicroseconds(t);
-  digitalWrite(DSPIN, HIGH);
-  return true;
-}
- 
-void DS18B20_Write(byte data)
-{
-  pinMode(DSPIN, OUTPUT);
-  for (int i = 0; i < 8; i++)
-  {
-    digitalWrite(DSPIN, LOW);
-    delayMicroseconds(10);
-    if (data & 1) digitalWrite(DSPIN, HIGH);
-    else digitalWrite(DSPIN, LOW);
-    data >>= 1;
-    delayMicroseconds(50);
-    digitalWrite(DSPIN, HIGH);
-  }
-}
- 
-byte DS18B20_Read()
-{
-  pinMode(DSPIN, OUTPUT);
-  digitalWrite(DSPIN, HIGH);
-  delayMicroseconds(2);
-  byte data = 0;
-  for (int i = 0; i < 8; i++)
-  {
-    digitalWrite(DSPIN, LOW);
-    delayMicroseconds(1);
-    digitalWrite(DSPIN, HIGH);
-    pinMode(DSPIN, INPUT);
-    delayMicroseconds(5);
-    data >>= 1;
-    if (digitalRead(DSPIN)) data |= 0x80;
-    delayMicroseconds(55);
-    pinMode(DSPIN, OUTPUT);
-    digitalWrite(DSPIN, HIGH);
-  }
-  return data;
-}
- 
-int TempRead()
-{
-  if (!DS18B20_Init()) return 0;
-  DS18B20_Write (0xCC); // Send skip ROM command
-  DS18B20_Write (0x44); // Send reading start conversion command
-  if (!DS18B20_Init()) return 0;
-  DS18B20_Write (0xCC); // Send skip ROM command
-  DS18B20_Write (0xBE); // Read the register, a total of nine bytes, the first two bytes are the conversion value
-  int temp = DS18B20_Read (); // Low byte
-  temp |= DS18B20_Read () << 8; // High byte
-  return temp;
 }
