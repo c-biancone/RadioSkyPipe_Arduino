@@ -18,15 +18,15 @@
 Adafruit_ADS1115 ads;  /* Use this for the 16-bit version */
 // setup ADC variables
 int16_t adc0, adc1, adc2, adc3;
-float volts0, volts1, volts2, volts3;
+double volts0, volts1, volts2, volts3;
 
 // DHT22 sensor
 #define DHTPIN 2
 #define DHTTYPE DHT22
 DHT dht(DHTPIN, DHTTYPE);
 int chk;
-double hum = 0;
-double temp = 0;
+//double hum = 0;
+//double temp = 0;
 
 // SkyPipe
 int POLL; // if =1 then data is polled by RSP using a GETD command
@@ -48,9 +48,9 @@ void setup() {
 // ADC
 //                                                                ADS1015  ADS1115
   //                                                                -------  -------
-  ads.setGain(GAIN_TWOTHIRDS);  // 2/3x gain +/- 6.144V  1 bit = 3mV      0.1875mV (default)
+  // ads.setGain(GAIN_TWOTHIRDS);  // 2/3x gain +/- 6.144V  1 bit = 3mV      0.1875mV (default)
   // ads.setGain(GAIN_ONE);        // 1x gain   +/- 4.096V  1 bit = 2mV      0.125mV
-  // ads.setGain(GAIN_TWO);        // 2x gain   +/- 2.048V  1 bit = 1mV      0.0625mV
+  ads.setGain(GAIN_TWO);        // 2x gain   +/- 2.048V  1 bit = 1mV      0.0625mV
   // ads.setGain(GAIN_FOUR);       // 4x gain   +/- 1.024V  1 bit = 0.5mV    0.03125mV
   // ads.setGain(GAIN_EIGHT);      // 8x gain   +/- 0.512V  1 bit = 0.25mV   0.015625mV
   // ads.setGain(GAIN_SIXTEEN);    // 16x gain  +/- 0.256V  1 bit = 0.125mV  0.0078125mV
@@ -188,26 +188,26 @@ void GETD(){
     volts2 = ads.computeVolts(adc2);
     adc3 = ads.readADC_SingleEnded(3);
     volts3 = ads.computeVolts(adc3);
-    hum = dht.readHumidity();
-    temp = dht.readTemperature();
+    float hum = dht.readHumidity();
+    float temp = dht.readTemperature();
 
 		// channel 1
         Serial.print("#0"); // # followed by channel number of data
-        Serial.print(volts0); // example read
+        Serial.print(volts0, 7); // 7 decimals from gain LSB
         Serial.write(255);
         Serial.print("^^3001"); // This tells RSP to time stamp it
         Serial.write(255); // all commands end with this character.
 		
 		// channel 2
 		Serial.print("#1"); // # followed by channel number of data
-        Serial.print(volts1); // example read
+        Serial.print(volts1, 7); // 7 decimals from gain LSB
         Serial.write(255);
         Serial.print("^^3001"); // This tells RSP to time stamp it
         Serial.write(255); // all commands end with this character.
 		
 		// channel 3
 		Serial.print("#2"); // # followed by channel number of data
-        Serial.print(volts2); // example read
+        Serial.print(volts2, 7); // 7 decimals from gain LSB
         Serial.write(255);
         Serial.print("^^3001"); // This tells RSP to time stamp it
         Serial.write(255); // all commands end with this character.
